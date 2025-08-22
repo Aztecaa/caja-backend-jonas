@@ -5,7 +5,7 @@ dotenv.config();
 export const login = (req, res) => {
   const usuarios = [
     { userName: process.env.USER1_USERNAME, password: process.env.USER1_PASSWORD, rol: process.env.USER1_ROLE },
-    { userName: process.env.USER2_USERNAME, password: process.env.USER2_USERNAME, rol: process.env.USER2_ROLE },
+    { userName: process.env.USER2_USERNAME, password: process.env.USER2_PASSWORD, rol: process.env.USER2_ROLE },
   ];
 
   const { userName, password } = req.body;
