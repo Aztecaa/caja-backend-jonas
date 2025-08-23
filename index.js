@@ -1,55 +1,60 @@
-// index.js
-import express from "express"
-import cors from "cors"
-import authRoutes from "./routes/auth.js"
-import { createServer } from "http"
-import { Server } from "socket.io"
-import dotenv from "dotenv"
+import express from "express";
+import cors from "cors";
+import authRoutes from "./routes/auth.js";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import dotenv from "dotenv";
 
-dotenv.config()
+dotenv.config();
 
-const app = express()
-const server = createServer(app) // ✅ un solo servidor HTTP
+const allowedOrigins = [
+  "http://localhost:5173", // Frontend local
+  "https://cajerojonas.netlify.app", // Frontend producción
+];
 
+const app = express();
+const server = createServer(app);
+
+// Middleware CORS
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true); // Postman u otros
+      if (!allowedOrigins.includes(origin)) {
+        return callback(new Error("CORS no permite este origen: " + origin), false);
+      }
+      return callback(null, true);
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
+app.use(express.json());
+
+// Rutas API
+app.use("/api/auth", authRoutes);
+
+app.get("/", (req, res) => res.send("API funcionando 🚀"));
+
+// Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173", "https://tu-app.netlify.app"],
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true,
   },
-})
+});
 
-// Middlewares
-app.use(express.json())
-app.use(cors({
-  origin: ["http://localhost:5173", "https://tu-app.netlify.app"],
-  credentials: true,
-}))
-
-// Rutas API
-app.use("/api/auth", authRoutes)
-
-app.get("/", (req, res) => {
-  res.send("API funcionando correctamente 🚀")
-})
-
-// Eventos de Socket.IO
 io.on("connection", (socket) => {
-  console.log("🔌 Nuevo cliente conectado:", socket.id)
+  console.log("🔌 Cliente conectado:", socket.id);
+  socket.on("chat-message", (msg) => io.emit("chat-message", msg));
+  socket.on("disconnect", () => console.log("❌ Cliente desconectado:", socket.id));
+});
 
-  socket.on("chat-message", (msg) => {
-    console.log("📨 Mensaje recibido:", msg)
-    // reenvía a todos los clientes (incluido el emisor si querés)
-    io.emit("chat-message", msg)
-  })
-
-  socket.on("disconnect", () => {
-    console.log("❌ Cliente desconectado:", socket.id)
-  })
-})
-
-// Levantar el servidor en un solo lugar
-const PORT = process.env.PORT || 3000
-server.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`)
-})
+// Levantar servidor
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, "0.0.0.0", () =>
+  console.log(`🚀 Servidor corriendo en puerto ${PORT}`)
+);

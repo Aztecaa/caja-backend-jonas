@@ -1,16 +1,9 @@
-// routes/auth.js
-import { Router } from "express"
+import { Router } from "express";
+import { login, registrar } from "../controllers/authController.js";
 
-const router = Router()
+const router = Router();
 
-router.post("/login", (req, res) => {
-    const { userName, password } = req.body
-    const user = users.find(u => u.userName === userName && u.password === password)
+router.post("/login", login);
+router.post("/register", registrar); // opcional, aunque deshabilitado
 
-    if (!user) return res.status(401).json({ error: "Usuario o contraseña incorrectos" })
-
-    // devolver datos mínimos
-    return res.json({ userName: user.userName, rol: user.rol })
-})
-
-export default router
+export default router;
