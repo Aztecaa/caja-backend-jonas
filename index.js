@@ -10,6 +10,8 @@ dotenv.config();
 const allowedOrigins = [
   "http://localhost:5173", // Frontend local
   "https://cajerojonas.netlify.app", // Frontend producción
+  "https://caja-backend.onrender.com"
+
 ];
 
 const app = express();
@@ -50,10 +52,10 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log("🔌 Cliente conectado:", socket.id);
   socket.on("chat-message", (msg) => io.emit("chat-message", msg));
-  socket.on("disconnect", () => console.log("❌ Cliente desconectado:", socket.id));
+  socket.on("disconnect", () => console.log("cliente desconectado:", socket.id));
 });
 
-// Levantar servidor
+// Levanto el servidor
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, "0.0.0.0", () =>
   console.log(`🚀 Servidor corriendo en puerto ${PORT}`)
