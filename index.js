@@ -1,3 +1,4 @@
+// index.js backend
 import express from "express";
 import cors from "cors";
 import authRoutes from "./routes/auth.js";
@@ -10,8 +11,7 @@ dotenv.config();
 const allowedOrigins = [
   "http://localhost:5173", // Frontend local
   "https://cajerojonas.netlify.app", // Frontend producción
-  "https://caja-backend.onrender.com"
-
+  "https://caja-backend.onrender.com/api/auth/login"
 ];
 
 const app = express();
