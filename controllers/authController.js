@@ -14,6 +14,11 @@ const cargarUsuarios = () => [
     password: process.env.USER2_PASSWORD,
     rol: process.env.USER2_ROLE,
   },
+  {
+    userName: process.env.USER3_USERNAME,
+    password: process.env.USER3_PASSWORD,
+    rol: process.env.USER3_ROLE,
+  },
 ];
 
 export const login = (req, res) => {
