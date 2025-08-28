@@ -19,6 +19,16 @@ const cargarUsuarios = () => [
     password: process.env.USER3_PASSWORD,
     rol: process.env.USER3_ROLE,
   },
+  {
+    userName: process.env.USER4_USERNAME,
+    password: process.env.USER4_PASSWORD,
+    rol: process.env.USER4_ROLE,
+  },
+  {
+    userName: process.env.USER5_USERNAME,
+    password: process.env.USER5_PASSWORD,
+    rol: process.env.USER5_ROLE,
+  },
 ];
 
 export const login = (req, res) => {
@@ -48,7 +58,7 @@ export const login = (req, res) => {
     }
 
     console.log("Login fallido");
-    return res.status(401).json({ error: "Credenciales inválidas" });
+    return res.status(401).json({ error: "Contraseña o usuario invalido" });
   } catch (err) {
     console.error("Error en login:", err);
     return res.status(500).json({ error: "Error interno del servidor" });
