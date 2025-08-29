@@ -6,11 +6,14 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import dotenv from "dotenv";
 
+import excelExport from './routes/excel.js';
+
 dotenv.config();
 
 const allowedOrigins = [
   "http://localhost:5173", // Frontend local
   "https://cajerojonas.netlify.app", // Frontend producción
+  "https://caja-backend-jonas.onrender.com",
 ];
 
 const app = express();
@@ -36,6 +39,8 @@ app.use(express.json());
 
 // Rutas API
 app.use("/api/auth", authRoutes);
+
+app.use("/api/report", excelExport)
 
 app.get("/", (req, res) => res.send("API funcionando 🚀"));
 
