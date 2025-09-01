@@ -19,16 +19,12 @@ router.post('/send', upload.single('file'), async (req, res) => {
                 pass: process.env.USER_PASSWORD,
             },
         })
-        //logs
-        console.log('Archivo recibido:', req.file);
-        console.log('User y fecha:', req.body.user, req.body.fecha);
-        console.log('Credenciales de mail:', process.env.USER_EMAIL ? 'ok' : 'missing', process.env.USER_PASSWORD ? 'ok' : 'missing');
 
         await transporter.sendMail({
             from: process.env.USER_EMAIL,
-            to: 'aztecaned@gmail.com', // Cambiar al correo de destino
+            to: 'mariojonas972@hotmail.es', // Cambiar al correo de destino
             subject: 'Reporte generado',
-            text: `Se adjunta el archivo generado por ${req.body.user || 'usuario desconocido'} el ${req.body.fecha || 'fecha desconocida'}`,
+            text: `Archivo generado por ${req.body.user || 'usuario desconocido'} el ${req.body.fecha || 'fecha desconocida'}`,
             attachments: [
                 {
                     filename: req.file.originalname,
