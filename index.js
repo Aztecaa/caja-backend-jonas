@@ -1,29 +1,28 @@
-// index.js backend
+// index.js
 import express from "express";
 import cors from "cors";
-import authRoutes from "./routes/auth.js";
-import { createServer } from "http";
-import { Server } from "socket.io";
 import dotenv from "dotenv";
-
-import excelExport from './routes/excel.js';
+import authRoutes from "./routes/auth.js";
+import excelExport from "./routes/excel.js";
+import { createServer } from "http";
+import initSocketServer from "./server.js"; // 👈 nuevo
+import productosRoutes from "./routes/productos.js";
 
 dotenv.config();
 
 const allowedOrigins = [
-  "http://localhost:5173", // Frontend local
-  "https://cajerojonas.netlify.app", // Frontend producción
+  "http://localhost:5173",
+  "https://cajerojonas.netlify.app",
   "https://caja-backend-jonas.onrender.com",
 ];
 
 const app = express();
-const server = createServer(app);
 
 // Middleware CORS
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin) return callback(null, true); // Postman u otros
+      if (!origin) return callback(null, true);
       if (!allowedOrigins.includes(origin)) {
         return callback(new Error("CORS no permite este origen: " + origin), false);
       }
@@ -37,29 +36,18 @@ app.use(
 
 app.use(express.json());
 
-// Rutas API
-app.use("/api/auth", authRoutes);
-
-app.use("/api/report", excelExport)
-
 app.get("/", (req, res) => res.send("API funcionando 🚀"));
+app.use("/api/auth", authRoutes);
+app.use("/api/report", excelExport);
+app.use("/api/productos", productosRoutes);
 
-// Socket.IO
-const io = new Server(server, {
-  cors: {
-    origin: allowedOrigins,
-    methods: ["GET", "POST"],
-    credentials: true,
-  },
-});
+// Crear servidor HTTP
+const server = createServer(app);
 
-io.on("connection", (socket) => {
-  console.log("🔌 Cliente conectado:", socket.id);
-  socket.on("chat-message", (msg) => io.emit("chat-message", msg));
-  socket.on("disconnect", () => console.log("cliente desconectado:", socket.id));
-});
+// 👉 inicializar socket.io en archivo separado
+initSocketServer(server, allowedOrigins);
 
-// Levanto el servidor
+// Levantar el server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, "0.0.0.0", () =>
   console.log(`🚀 Servidor corriendo en puerto ${PORT}`)
