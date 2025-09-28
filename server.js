@@ -32,6 +32,11 @@ export default function initSocketServer(server, allowedOrigins) {
     io.on("connection", (socket) => {
         console.log("🟢 Cliente conectado");
 
+        socket.on("chat-message", (msg) => {
+            console.log("💬 Mensaje recibido:", msg);
+            io.emit("chat-message", msg); // reenvía a todos los clientes conectados
+        });
+
         // Al conectar, enviar stock actual
         socket.emit("stockActualizado", productos);
 
