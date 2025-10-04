@@ -8,21 +8,23 @@ const upload = multer({ storage: multer.memoryStorage() })
 
 router.post('/send', upload.single('file'), async (req, res) => {
     try {
+        console.log("Body:", req.body);
+        console.log("File:", req.file);
         if (!req.file) {
             return res.status(400).json({ success: false, error: 'No se recibió ningún archivo' })
         }
 
         const transporter = nodemailer.createTransport({
-            service: 'gmail', // Cambia por el servicio que uses
+            service: 'gmail',
             auth: {
-                user: process.env.USER_EMAIL,
-                pass: process.env.USER_PASSWORD,
+                user: process.env.EXCELUSER_EMAIL,
+                pass: process.env.EXCELUSER_PASSWORD,
             },
         })
 
         await transporter.sendMail({
-            from: process.env.USER_EMAIL,
-            to: 'mariojonas972@hotmail.es', // Cambiar al correo de destino
+            from: process.env.EXCELUSER_EMAIL,
+            to: 'aztecaned@gmail.com',
             subject: 'Reporte generado',
             text: `Archivo generado por ${req.body.user || 'usuario desconocido'} el ${req.body.fecha || 'fecha desconocida'}`,
             attachments: [
