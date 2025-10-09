@@ -37,7 +37,7 @@ app.use(
 
 // MIDDLEWARES BASE
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // ✅ importante para form-data
+app.use(express.urlencoded({ extended: true }));
 
 // === LOG SIMPLE PARA DEBUG ===
 app.use((req, res, next) => {
@@ -49,7 +49,7 @@ app.use((req, res, next) => {
 app.get("/", (req, res) => res.send("🚀 API funcionando correctamente"));
 
 app.use("/api/auth", authRoutes);
-app.use("/api/report", excelExport); // 📊 envío de Excel
+app.use("/api/report", excelExport);
 app.use("/api/productos", productosRoutes);
 
 // === SERVIDOR + SOCKET.IO ===
@@ -62,7 +62,6 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, error: "Error interno del servidor" });
 });
 
-// === INICIO DEL SERVER ===
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, "0.0.0.0", () =>
   console.log(`🚀 Servidor corriendo en puerto ${PORT}`)
