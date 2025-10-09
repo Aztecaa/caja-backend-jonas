@@ -2,15 +2,13 @@
 import express from "express";
 const router = express.Router();
 
-// ⚡ Stock en memoria
 let productos = [];
 
-// ✅ GET: obtener todos los productos
 router.get("/", (req, res) => {
     res.json(productos);
 });
 
-// ✅ POST: agregar producto (solo unidades sueltas)
+// agregar producto (solo unidades sueltas)
 router.post("/", (req, res) => {
     let {
         codigo = "",

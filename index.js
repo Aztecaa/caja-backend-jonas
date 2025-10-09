@@ -2,23 +2,24 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import { createServer } from "http";
+
 import authRoutes from "./routes/auth.js";
 import excelExport from "./routes/excel.js";
-import { createServer } from "http";
-import initSocketServer from "./server.js"; // 👈 nuevo
 import productosRoutes from "./routes/productos.js";
+import initSocketServer from "./server.js";
 
 dotenv.config();
 
+const app = express();
+
+// CORS
 const allowedOrigins = [
   "http://localhost:5173",
   "https://cajerojonas.netlify.app",
   "https://caja-backend-jonas.onrender.com",
 ];
 
-const app = express();
-
-// Middleware CORS
 app.use(
   cors({
     origin: function (origin, callback) {
@@ -34,20 +35,34 @@ app.use(
   })
 );
 
+// MIDDLEWARES BASE
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // ✅ importante para form-data
 
-app.get("/", (req, res) => res.send("API funcionando 🚀"));
+// === LOG SIMPLE PARA DEBUG ===
+app.use((req, res, next) => {
+  console.log(`📥 [${req.method}] ${req.originalUrl}`);
+  next();
+});
+
+// === RUTAS ===
+app.get("/", (req, res) => res.send("🚀 API funcionando correctamente"));
+
 app.use("/api/auth", authRoutes);
-app.use("/api/report", excelExport);
+app.use("/api/report", excelExport); // 📊 envío de Excel
 app.use("/api/productos", productosRoutes);
 
-// Crear servidor HTTP
+// === SERVIDOR + SOCKET.IO ===
 const server = createServer(app);
-
-// 👉 inicializar socket.io en archivo separado
 initSocketServer(server, allowedOrigins);
 
-// Levantar el server
+// === MANEJO DE ERRORES GENERALES ===
+app.use((err, req, res, next) => {
+  console.error("❌ Error global:", err.message);
+  res.status(500).json({ success: false, error: "Error interno del servidor" });
+});
+
+// === INICIO DEL SERVER ===
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, "0.0.0.0", () =>
   console.log(`🚀 Servidor corriendo en puerto ${PORT}`)

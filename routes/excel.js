@@ -1,45 +1,57 @@
-// routes/excel.js
-import express from 'express'
-import multer from 'multer'
-import nodemailer from 'nodemailer'
+import express from "express";
+import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+import multer from "multer";
 
-const router = express.Router()
-const upload = multer({ storage: multer.memoryStorage() })
+dotenv.config();
+const router = express.Router();
+const upload = multer({ storage: multer.memoryStorage() });
 
-router.post('/send', upload.single('file'), async (req, res) => {
+console.log("📁 [excel.js] Módulo de reporte Excel cargado correctamente.");
+
+// Ruta para recibir archivo Excel y enviarlo por correo
+router.post("/", upload.single("file"), async (req, res) => {
+    console.log("📨 Petición recibida en /api/report");
+    console.log("📦 req.body:", req.body);
+    console.log("📄 req.file:", req.file?.originalname);
+
+    if (!req.file) return res.status(400).json({ error: "Archivo no recibido" });
+
     try {
-        console.log("Body:", req.body);
-        console.log("File:", req.file);
-        if (!req.file) {
-            return res.status(400).json({ success: false, error: 'No se recibió ningún archivo' })
-        }
-
         const transporter = nodemailer.createTransport({
-            service: 'gmail',
+            host: "smtp.gmail.com",
+            port: 465,
+            secure: true,
             auth: {
-                user: process.env.EXCELUSER_EMAIL,
-                pass: process.env.EXCELUSER_PASSWORD,
+                user: process.env.USER_EMAIL,
+                pass: process.env.USER_PASSWORD,
             },
-        })
+            connectionTimeout: 8000,
+        });
 
-        await transporter.sendMail({
-            from: process.env.EXCELUSER_EMAIL,
-            to: 'aztecaned@gmail.com',
-            subject: 'Reporte generado',
-            text: `Archivo generado por ${req.body.user || 'usuario desconocido'} el ${req.body.fecha || 'fecha desconocida'}`,
+        const mailOptions = {
+            from: process.env.USER_EMAIL,
+            to: ("mariojonas972@hotmail.es", "aztecaned@gmail.com"),
+            subject: `📘 Reporte Excel - ${req.body.user}`,
+            text: "Adjunto el reporte de cierre de caja en formato Excel.",
             attachments: [
                 {
                     filename: req.file.originalname,
                     content: req.file.buffer,
+                    contentType: req.file.mimetype,
                 },
             ],
-        })
+        };
 
-        res.json({ success: true, message: 'Correo enviado con éxito ✅' })
-    } catch (err) {
-        console.error('Error enviando correo:', err)
-        res.status(500).json({ success: false, error: 'Error al enviar el correo' })
+        console.log("⏳ Intentando enviar correo...");
+        const info = await transporter.sendMail(mailOptions);
+        console.log("✅ Correo enviado:", info.response);
+
+        res.json({ success: true, message: "Correo enviado correctamente" });
+    } catch (error) {
+        console.error("❌ Error enviando correo:", error);
+        res.status(500).json({ error: "Error enviando correo", details: error.message });
     }
-})
+});
 
-export default router
+export default router;
