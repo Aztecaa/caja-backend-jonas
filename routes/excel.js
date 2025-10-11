@@ -24,7 +24,7 @@ router.post("/", upload.single("file"), async (req, res) => {
 
     try {
         const msg = {
-            to: "mariojonas972@hotmail.es", // destinatario (podés poner varios)
+            to: "superjonas202@gmail.com", // destinatario (podés poner varios)
             from: process.env.USER_EMAIL, // remitente verificado en SendGrid
             subject: `📘 Reporte Excel - ${req.body.user}`,
             text: `Adjunto el reporte de cierre de caja del ${req.body.fecha}.`,
