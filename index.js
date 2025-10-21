@@ -13,7 +13,7 @@ dotenv.config();
 
 const app = express();
 
-// CORS
+// === CORS ===
 const allowedOrigins = [
   "http://localhost:5173",
   "https://cajerojonas.netlify.app",
@@ -35,7 +35,7 @@ app.use(
   })
 );
 
-// MIDDLEWARES BASE
+// === MIDDLEWARES ===
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -54,15 +54,23 @@ app.use("/api/productos", productosRoutes);
 
 // === SERVIDOR + SOCKET.IO ===
 const server = createServer(app);
-initSocketServer(server, allowedOrigins);
 
-// === MANEJO DE ERRORES GENERALES ===
+// Inicializamos Socket.IO de forma asíncrona antes de escuchar
+(async () => {
+  try {
+    await initSocketServer(server, allowedOrigins);
+    const PORT = process.env.PORT || 3000;
+    server.listen(PORT, "0.0.0.0", () =>
+      console.log(`🚀 Servidor corriendo en puerto ${PORT}`)
+    );
+  } catch (err) {
+    console.error("❌ Error iniciando servidor:", err);
+    process.exit(1); // salir si no se puede iniciar correctamente
+  }
+})();
+
+// === MANEJO DE ERRORES ===
 app.use((err, req, res, next) => {
   console.error("❌ Error global:", err.message);
   res.status(500).json({ success: false, error: "Error interno del servidor" });
 });
-
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, "0.0.0.0", () =>
-  console.log(`🚀 Servidor corriendo en puerto ${PORT}`)
-);
