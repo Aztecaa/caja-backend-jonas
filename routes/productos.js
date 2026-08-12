@@ -1,51 +1,81 @@
-// routes/productos.js
 import express from "express";
+import { productos, guardarStock } from "../stockHandler.js";
+
 const router = express.Router();
 
-let productos = [];
-
 router.get("/", (req, res) => {
-    res.json(productos);
+  res.json(productos);
 });
 
-// agregar producto (solo unidades sueltas)
-router.post("/", (req, res) => {
+router.post("/", async (req, res) => {
+  try {
     let {
-        codigo = "",
-        nombre = "",
-        precio = 0,
-        cantidadUnidadesSueltas = 0,
+      codigo = "",
+      nombre = "",
+      precioCosto = 0,
+      precioVenta = 0,
+      cantidadUnidadesSueltas = 0,
+      enPromocion = false,
     } = req.body;
 
-    if (!codigo || !nombre) {
-        return res.status(400).json({ ok: false, msg: "Faltan datos obligatorios" });
+    if (req.body.precio !== undefined && !precioVenta) {
+      precioVenta = Number(req.body.precio) || 0;
+    }
+    if (req.body.cantidad !== undefined && !cantidadUnidadesSueltas) {
+      cantidadUnidadesSueltas = Number(req.body.cantidad) || 0;
+    }
+    if (!codigo) {
+      return res.status(400).json({ ok: false, msg: "El código es obligatorio" });
     }
 
+    precioCosto = Number(precioCosto) || 0;
+    precioVenta = Number(precioVenta) || 0;
     cantidadUnidadesSueltas = Number(cantidadUnidadesSueltas) || 0;
-    precio = Number(precio) || 0;
+    enPromocion = Boolean(enPromocion);
+    nombre = (nombre || "").trim() || "Sin nombre";
 
-    // Buscar si ya existe
-    let existente = productos.find((p) => p.codigo === codigo);
-
+    const existente = productos.find((p) => p.codigo === codigo);
     if (existente) {
-        // Si existe, solo sumamos unidades y actualizamos precio
-        existente.cantidadUnidadesSueltas += cantidadUnidadesSueltas;
-        existente.precio = precio;
+      existente.nombre = nombre;
+      existente.precioCosto = precioCosto;
+      existente.precioVenta = precioVenta;
+      existente.cantidadUnidadesSueltas = cantidadUnidadesSueltas;
+      existente.enPromocion = enPromocion;
+      existente.precio = precioVenta;
     } else {
-        // Si no existe, lo agregamos
-        productos.push({
-            codigo,
-            nombre,
-            precio,
-            cantidadUnidadesSueltas,
-        });
+      productos.push({
+        codigo,
+        nombre,
+        precioCosto,
+        precioVenta,
+        cantidadUnidadesSueltas,
+        enPromocion,
+        precio: precioVenta,
+      });
     }
 
-    // Emitir actualización por socket si existe io en el request
+    await guardarStock();
     if (req.io) req.io.emit("stockActualizado", productos);
-
     res.json({ ok: true, productos });
+  } catch (err) {
+    res.status(500).json({ ok: false, msg: err.message });
+  }
 });
 
-export { productos };
+router.delete("/:codigo", async (req, res) => {
+  try {
+    const { codigo } = req.params;
+    const index = productos.findIndex((p) => p.codigo === codigo);
+    if (index === -1) {
+      return res.status(404).json({ ok: false, msg: "Producto no encontrado" });
+    }
+    productos.splice(index, 1);
+    await guardarStock();
+    if (req.io) req.io.emit("stockActualizado", productos);
+    res.json({ ok: true, productos });
+  } catch (err) {
+    res.status(500).json({ ok: false, msg: err.message });
+  }
+});
+
 export default router;

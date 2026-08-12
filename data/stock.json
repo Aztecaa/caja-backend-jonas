@@ -1,0 +1,11 @@
+[
+  {
+    "codigo": "123",
+    "nombre": "Producto de ejemplo",
+    "precioCosto": 1000,
+    "precioVenta": 1500,
+    "cantidadUnidadesSueltas": 9,
+    "enPromocion": false,
+    "precio": 1500
+  }
+]
