@@ -4,8 +4,17 @@
     "nombre": "Producto de ejemplo",
     "precioCosto": 1000,
     "precioVenta": 1500,
-    "cantidadUnidadesSueltas": 9,
+    "cantidadUnidadesSueltas": 162,
     "enPromocion": false,
     "precio": 1500
+  },
+  {
+    "codigo": "789",
+    "nombre": "Producto de ejemplo 2",
+    "precioCosto": 2000,
+    "precioVenta": 2800,
+    "cantidadUnidadesSueltas": 19,
+    "enPromocion": false,
+    "precio": 2800
   }
 ]

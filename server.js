@@ -7,9 +7,24 @@ import {
   exportarStockJSON,
   importarStockJSON,
 } from "./stockHandler.js";
+import {
+  lotes,
+  guardarLotes,
+  cargarLotesInicial,
+  normalizarLote,
+  consumirLotesFEFO,
+} from "./loteHandler.js";
+import {
+  bultos,
+  guardarBultos,
+  cargarBultosInicial,
+  normalizarBulto,
+} from "./bultoHandler.js";
 
 export default async function initSocketServer(server, allowedOrigins) {
   await cargarStockInicial();
+  await cargarLotesInicial();
+  await cargarBultosInicial();
   console.log("🚀 Inicializando Socket.IO...");
 
   await hacerBackupDiario();
@@ -43,6 +58,8 @@ export default async function initSocketServer(server, allowedOrigins) {
   io.on("connection", (socket) => {
     console.log(`🟢 Cliente conectado: ${socket.id}`);
     socket.emit("stockActualizado", productos);
+    socket.emit("lotesActualizados", lotes);
+    socket.emit("bultosActualizados", bultos);
 
     socket.on("agregarProducto", async (data) => {
       try {
@@ -83,11 +100,97 @@ export default async function initSocketServer(server, allowedOrigins) {
               0
             );
           }
+          consumirLotesFEFO(codigo, cantidad);
         });
         await guardarStock();
+        await guardarLotes();
         io.emit("stockActualizado", productos);
+        io.emit("lotesActualizados", lotes);
       } catch (err) {
         console.error("Error en confirmarVenta:", err);
+      }
+    });
+
+    socket.on("agregarBulto", async (data) => {
+      try {
+        const bulto = normalizarBulto(data);
+        if (!bulto.codigo || !bulto.unidadAsignada || !bulto.unidadesPorBulto) {
+          socket.emit("errorStock", {
+            msg: "Código, producto asignado y unidades por bulto son obligatorios",
+          });
+          return;
+        }
+        const idx = bultos.findIndex((b) => b.codigo === bulto.codigo);
+        if (idx >= 0) bultos[idx] = { ...bultos[idx], ...bulto };
+        else bultos.push(bulto);
+
+        await guardarBultos();
+        io.emit("bultosActualizados", bultos);
+      } catch (err) {
+        console.error("Error en agregarBulto:", err);
+        socket.emit("errorStock", { msg: "No se pudo guardar el bulto" });
+      }
+    });
+
+    socket.on("eliminarBulto", async (codigo) => {
+      try {
+        const index = bultos.findIndex((b) => b.codigo === codigo);
+        if (index !== -1) {
+          bultos.splice(index, 1);
+          await guardarBultos();
+          io.emit("bultosActualizados", bultos);
+        }
+      } catch (err) {
+        console.error("Error en eliminarBulto:", err);
+      }
+    });
+
+    // data: { id, codigoBulto, cantidadBultos, costoLote, fechaVencimiento }
+    socket.on("agregarLote", async (data) => {
+      try {
+        const bulto = bultos.find((b) => b.codigo === data.codigoBulto);
+        if (!bulto) {
+          socket.emit("errorStock", { msg: "No existe un bulto con ese código" });
+          return;
+        }
+
+        const lote = normalizarLote(data, bulto);
+        if (!lote.id) {
+          socket.emit("errorStock", { msg: "Falta el número/id de lote" });
+          return;
+        }
+
+        const idx = lotes.findIndex((l) => l.id === lote.id);
+        if (idx >= 0) lotes[idx] = { ...lotes[idx], ...lote };
+        else lotes.push(lote);
+
+        // Suma las unidades del lote al stock del producto unitario vinculado
+        const prod = productos.find((p) => p.codigo === lote.unidadAsignada);
+        if (prod) {
+          prod.cantidadUnidadesSueltas =
+            (prod.cantidadUnidadesSueltas || 0) + lote.unidadesContenidas;
+        }
+
+        await guardarLotes();
+        await guardarStock();
+        io.emit("lotesActualizados", lotes);
+        io.emit("stockActualizado", productos);
+      } catch (err) {
+        console.error("Error en agregarLote:", err);
+        socket.emit("errorStock", { msg: "No se pudo guardar el lote" });
+      }
+    });
+
+    socket.on("eliminarLote", async (id) => {
+      try {
+        const index = lotes.findIndex((l) => l.id === id);
+        if (index !== -1) {
+          lotes.splice(index, 1);
+          await guardarLotes();
+          io.emit("lotesActualizados", lotes);
+        }
+      } catch (err) {
+        console.error("Error en eliminarLote:", err);
       }
     });
 

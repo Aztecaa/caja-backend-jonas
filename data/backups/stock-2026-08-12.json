@@ -4,7 +4,7 @@
     "nombre": "Producto de ejemplo",
     "precioCosto": 1000,
     "precioVenta": 1500,
-    "cantidadUnidadesSueltas": 9,
+    "cantidadUnidadesSueltas": 7,
     "enPromocion": false,
     "precio": 1500
   }
